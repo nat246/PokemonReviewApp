@@ -14,27 +14,28 @@ namespace PokemonReviewApp.Repository
         }
         public bool CountryExists(int id)
         {
-            return context.
+            return context.Countries.Any(c => c.Id == id);
         }
 
         public ICollection<Country> GetCountries()
         {
-            throw new NotImplementedException();
+            return context.Countries.OrderBy(c => c.Name).ToList();
         }
 
         public Country GetCountry(int id)
         {
-            throw new NotImplementedException();
+            return context.Countries.Where(c => c.Id == id).FirstOrDefault();
         }
 
         public Country GetCountryByOwner(int ownerId)
         {
-            throw new NotImplementedException();
+            return context.Owners.Where(o => o.Id == ownerId)
+                .Select(c => c.Country).FirstOrDefault();
         }
 
         public ICollection<Owner> GetOwnersFromACountry(int countryId)
         {
-            throw new NotImplementedException();
+            return context.Owners.Where(o => o.Country.Id == countryId).ToList();
         }
     }
 }
