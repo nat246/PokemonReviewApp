@@ -13,6 +13,10 @@ builder.Services.AddControllers();
 // For seeding
 builder.Services.AddTransient<Seed>();
 
+// Add Automapper dependency 
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
+// Add repository dependencies
 builder.Services.AddScoped<IPokemonRepository, PokemonRepository>();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
