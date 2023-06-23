@@ -4,6 +4,7 @@ using PokemonReviewApp.Data;
 using PokemonReviewApp.Interfaces;
 using PokemonReviewApp.Models;
 using PokemonReviewApp.Repository;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +14,10 @@ builder.Services.AddControllers();
 
 // For seeding
 builder.Services.AddTransient<Seed>();
+
+// Cycle Error Fix
+builder.Services.AddControllers().AddJsonOptions(x =>
+                x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
 
 // Add Automapper dependency 
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
