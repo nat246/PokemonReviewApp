@@ -11,11 +11,15 @@ namespace PokemonReviewApp.Controllers
     public class ReviewController : Controller
     {
         private readonly IReviewRepository reviewRepository;
+        private readonly IReviewerRepository reviewerRepository;
+        private readonly IPokemonRepository pokemonRepository;
         private readonly IMapper mapper;
 
-        public ReviewController(IReviewRepository reviewRepository, IMapper mapper)
+        public ReviewController(IReviewRepository reviewRepository, IReviewerRepository reviewerRepository, IPokemonRepository pokemonRepository, IMapper mapper)
         {
             this.reviewRepository = reviewRepository;
+            this.reviewerRepository = reviewerRepository;
+            this.pokemonRepository = pokemonRepository;
             this.mapper = mapper;
         }
 
@@ -66,6 +70,44 @@ namespace PokemonReviewApp.Controllers
             }
 
             return Ok(reviewsOfPokemon);
+        }
+
+        [HttpPost]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(400)]
+        public IActionResult CreateReview([FromQuery] int reviewerId, [FromQuery] int pokeId, [FromBody] ReviewDto reviewCreate)
+        {
+            if (reviewCreate == null)
+                return BadRequest(ModelState);
+
+            var review = reviewRepository.GetReviews()
+                .Where(r => r.Title.TrimEnd().ToUpper() == reviewCreate.Title.TrimEnd().ToUpper())
+                .FirstOrDefault();
+
+            if (review != null)
+            {
+                ModelState.AddModelError("", "Review already exists");
+                return StatusCode(422, ModelState);
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var reviewMap = mapper.Map<Review>(reviewCreate);
+
+            reviewMap.Reviewer = reviewerRepository.GetReviewer(reviewerId);
+            reviewMap.Pokemon = pokemonRepository.GetPokemon(pokeId);
+
+            if (!reviewRepository.CreateReview(reviewMap))
+            {
+                ModelState.AddModelError("", "Something went wrong while saving");
+                return StatusCode(500, ModelState);
+            }
+
+            return Ok("Succesfully created");
+
         }
     }
 }
