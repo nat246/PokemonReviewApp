@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using PokemonReviewApp.Dto;
 using PokemonReviewApp.Interfaces;
 using PokemonReviewApp.Models;
+using PokemonReviewApp.Repository;
 
 namespace PokemonReviewApp.Controllers
 {
@@ -11,11 +12,15 @@ namespace PokemonReviewApp.Controllers
     public class PokemonsController : Controller
     {
         private readonly IPokemonRepository pokemonRepository;
+        private readonly IOwnerRepository ownerRepository;
+        private readonly ICategoryRepository categoryRepository;
         private readonly IMapper mapper;
 
-        public PokemonsController(IPokemonRepository pokemonRepository, IMapper mapper)
+        public PokemonsController(IPokemonRepository pokemonRepository, IOwnerRepository ownerRepository, ICategoryRepository categoryRepository, IMapper mapper)
         {
             this.pokemonRepository = pokemonRepository;
+            this.ownerRepository = ownerRepository;
+            this.categoryRepository = categoryRepository;
             this.mapper = mapper;
         }
 
@@ -100,6 +105,33 @@ namespace PokemonReviewApp.Controllers
 
             return Ok("Successfully created");
         }
+        [HttpPut("{pokeId}")]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
+        public IActionResult UpdatePokemon(int pokeId,[FromBody] PokemonDto updatedPokemon)
+        {
+            if (updatedPokemon == null)
+                return BadRequest(ModelState);
 
+            if (pokeId != updatedPokemon.Id)
+                return BadRequest(ModelState);
+
+            if (!pokemonRepository.PokemonExists(pokeId))
+                return NotFound();
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var pokemonMapper = mapper.Map<Pokemon>(updatedPokemon);
+            
+            if (!pokemonRepository.UpdatePokemon(pokemonMapper))
+            {
+                ModelState.AddModelError("", "Something went wrong while updating pokemon");
+                return BadRequest(ModelState);
+            }
+
+            return Ok("Successfully Updated Pokemon");
+        }
     }
 }
