@@ -19,6 +19,19 @@ namespace PokemonReviewApp.Repository
             return Save();
         }
 
+        public bool DeleteReview(Review review)
+        {
+            context.Remove(review);
+            return Save();
+        }
+
+        public bool DeleteReviews(List<Review> reviews)
+        {
+            // Very cool
+            context.RemoveRange(reviews);
+            return Save();
+        }
+
         public Review GetReview(int id)
         {
             return context.Reviews.Where(r => r.Id == id).FirstOrDefault();

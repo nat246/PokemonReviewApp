@@ -14,13 +14,15 @@ namespace PokemonReviewApp.Controllers
         private readonly IPokemonRepository pokemonRepository;
         private readonly IOwnerRepository ownerRepository;
         private readonly ICategoryRepository categoryRepository;
+        private readonly IReviewRepository reviewRepository;
         private readonly IMapper mapper;
 
-        public PokemonsController(IPokemonRepository pokemonRepository, IOwnerRepository ownerRepository, ICategoryRepository categoryRepository, IMapper mapper)
+        public PokemonsController(IPokemonRepository pokemonRepository, IOwnerRepository ownerRepository, ICategoryRepository categoryRepository, IReviewRepository reviewRepository,IMapper mapper)
         {
             this.pokemonRepository = pokemonRepository;
             this.ownerRepository = ownerRepository;
             this.categoryRepository = categoryRepository;
+            this.reviewRepository = reviewRepository;
             this.mapper = mapper;
         }
 
@@ -132,6 +134,36 @@ namespace PokemonReviewApp.Controllers
             }
 
             return Ok("Successfully Updated Pokemon");
+        }
+
+        [HttpDelete("{pokeId}")]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
+        public IActionResult DeletePokemon(int pokeId)
+        {
+            if (!pokemonRepository.PokemonExists(pokeId))
+                return NotFound();
+
+            var reviewsToDelete = reviewRepository.GetReviewsOfAPokemon(pokeId);
+            var pokemonToDelete = pokemonRepository.GetPokemon(pokeId);
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            if (!reviewRepository.DeleteReviews(reviewsToDelete.ToList()))
+            {
+                ModelState.AddModelError("", "Something went wrong while deleting reviews");
+                return BadRequest(ModelState);
+            }
+
+            if (!pokemonRepository.DeletePokemon(pokemonToDelete))
+            {
+                ModelState.AddModelError("", "Something went wrong while deleting pokemon");
+                return BadRequest(ModelState);
+            }
+
+            return Ok("Successfully deleted pokemon");
         }
     }
 }
